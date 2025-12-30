@@ -69,4 +69,4 @@ VM создалась в Yandex Cloud:
 - `tests.sh` — тестирует API
 
 
-Сервис будет на http://localhost:8080
+Сервис будет на http://localhost:8080 / run worflow

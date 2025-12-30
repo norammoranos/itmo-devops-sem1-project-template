@@ -7,12 +7,13 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 # Конфигурация
-API_HOST="http://localhost:8080"
-DB_HOST="localhost"
-DB_PORT="5432"
-DB_NAME="project-sem-1"
-DB_USER="validator"
-DB_PASSWORD="val1dat0r"
+API_HOST="${API_HOST}"
+API_URL="http://${API_HOST}:${APP_PORT}"
+DB_HOST="${API_HOST}"
+DB_PORT="${APP_DB_PORT}"
+DB_NAME="${APP_DB_NAME}"
+DB_USER="${APP_DB_USER}"
+DB_PASSWORD="${APP_DB_PASSWORD}"
 
 # Временные файлы для тестирования
 TEST_ZIP="test_data.zip"
@@ -55,7 +56,7 @@ check_api_simple() {
     
     # Проверка POST /api/v0/prices
     echo "Тестирование POST /api/v0/prices"
-    response=$(curl -s -F "file=@$TEST_ZIP" "${API_HOST}/api/v0/prices")
+    response=$(curl -s -F "file=@$TEST_ZIP" "${API_URL}/api/v0/prices")
     if [[ $response == *"total_items"* && $response == *"total_categories"* && $response == *"total_price"* ]]; then
         echo -e "${GREEN}✓ POST запрос успешен${NC}"
         
@@ -74,7 +75,7 @@ check_api_simple() {
     tmp_dir=$(mktemp -d)
     cd "$tmp_dir"
     
-    if ! curl -s "${API_HOST}/api/v0/prices" -o "$RESPONSE_ZIP"; then
+    if ! curl -s "${API_URL}/api/v0/prices" -o "$RESPONSE_ZIP"; then
         cd "$current_dir"
         rm -rf "$tmp_dir"
         echo -e "${RED}✗ GET запрос неуспешен${NC}"
@@ -109,7 +110,7 @@ check_api_advanced() {
     
     # Проверка POST с ZIP
     echo "Тестирование POST /api/v0/prices?type=zip"
-    response=$(curl -s -F "file=@$TEST_ZIP" "${API_HOST}/api/v0/prices?type=zip")
+    response=$(curl -s -F "file=@$TEST_ZIP" "${API_URL}/api/v0/prices?type=zip")
     if [[ $response == *"total_items"* ]]; then
         echo -e "${GREEN}✓ POST запрос с ZIP успешен${NC}"
     else
@@ -119,7 +120,7 @@ check_api_advanced() {
     
     # Проверка POST с TAR
     echo "Тестирование POST /api/v0/prices?type=tar"
-    response=$(curl -s -F "file=@$TEST_TAR" "${API_HOST}/api/v0/prices?type=tar")
+    response=$(curl -s -F "file=@$TEST_TAR" "${API_URL}/api/v0/prices?type=tar")
     if [[ $response == *"total_items"* ]]; then
         echo -e "${GREEN}✓ POST запрос с TAR успешен${NC}"
     else
@@ -137,7 +138,7 @@ check_api_complex() {
     
     # Проверка POST с проверкой обработки некорректных данных
     echo "Тестирование POST /api/v0/prices?type=zip с некорректными данными"
-    response=$(curl -s -F "file=@$TEST_ZIP" "${API_HOST}/api/v0/prices?type=zip")
+    response=$(curl -s -F "file=@$TEST_ZIP" "${API_URL}/api/v0/prices?type=zip")
     
     # Проверяем все обязательные поля в ответе
     local required_fields=("total_count" "duplicates_count" "total_items" "total_categories" "total_price")
@@ -187,7 +188,7 @@ check_api_complex() {
     tmp_dir=$(mktemp -d)
     cd "$tmp_dir"
     
-    if ! curl -s "${API_HOST}/api/v0/prices?${filters}" -o "$RESPONSE_ZIP"; then
+    if ! curl -s "${API_URL}/api/v0/prices?${filters}" -o "$RESPONSE_ZIP"; then
         cd "$current_dir"
         rm -rf "$tmp_dir"
         echo -e "${RED}✗ GET запрос с фильтрами неуспешен${NC}"

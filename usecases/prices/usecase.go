@@ -51,8 +51,8 @@ func (u *Usecase) SavePrices(prices []Price, totalCount int) (*Stats, error) {
 		for _, p := range uniquePrices {
 			var exists bool
 			err := conn.QueryRow(ctx,
-				"SELECT EXISTS(SELECT 1 FROM prices WHERE id = $1 AND name = $2 AND category = $3 AND price = $4 AND create_date = $5)",
-				p.ID, p.Name, p.Category, p.Price, p.CreateDate,
+				"SELECT EXISTS(SELECT 1 FROM prices WHERE name = $1 AND category = $2 AND price = $3 AND create_date = $4)",
+				p.Name, p.Category, p.Price, p.CreateDate,
 			).Scan(&exists)
 			if err != nil {
 				return err
@@ -64,8 +64,8 @@ func (u *Usecase) SavePrices(prices []Price, totalCount int) (*Stats, error) {
 			}
 
 			_, err = conn.Exec(ctx,
-				"INSERT INTO prices (id, name, category, price, create_date) VALUES ($1, $2, $3, $4, $5)",
-				p.ID, p.Name, p.Category, p.Price, p.CreateDate,
+				"INSERT INTO prices (name, category, price, create_date) VALUES ($1, $2, $3, $4)",
+				p.Name, p.Category, p.Price, p.CreateDate,
 			)
 			if err != nil {
 				return err
@@ -90,7 +90,7 @@ func (u *Usecase) SavePrices(prices []Price, totalCount int) (*Stats, error) {
 func (u *Usecase) GetPrices(filter Filter) ([]Price, error) {
 	ctx := context.Background()
 
-	query := "SELECT id, name, category, price, TO_CHAR(create_date, 'YYYY-MM-DD') FROM prices WHERE 1=1"
+	query := "SELECT id, name, category, price, create_date FROM prices WHERE 1=1"
 	args := []any{}
 	argNum := 1
 
@@ -129,13 +129,19 @@ func (u *Usecase) GetPrices(filter Filter) ([]Price, error) {
 	var prices []Price
 	for rows.Next() {
 		var p Price
-		if err := rows.Scan(&p.ID, &p.Name, &p.Category, &p.Price, &p.CreateDate); err != nil {
+		var createDate string
+		if err := rows.Scan(&p.ID, &p.Name, &p.Category, &p.Price, &createDate); err != nil {
 			return nil, err
 		}
+		p.CreateDate = formatDate(createDate)
 		prices = append(prices, p)
 	}
 
-	return prices, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return prices, nil
 }
 
 func removeDuplicates(prices []Price) ([]Price, int) {
@@ -157,7 +163,7 @@ func removeDuplicates(prices []Price) ([]Price, int) {
 }
 
 func priceKey(p Price) string {
-	return itoa(p.ID) + "|" + p.Name + "|" + p.Category + "|" + ftoa(p.Price) + "|" + p.CreateDate
+	return p.Name + "|" + p.Category + "|" + ftoa(p.Price) + "|" + p.CreateDate
 }
 
 func itoa(i int) string {
@@ -190,4 +196,11 @@ func ftoa(f float64) string {
 		frac = "0" + frac
 	}
 	return itoa(intPart) + "." + frac
+}
+
+func formatDate(date string) string {
+	if len(date) >= 10 {
+		return date[:10]
+	}
+	return date
 }

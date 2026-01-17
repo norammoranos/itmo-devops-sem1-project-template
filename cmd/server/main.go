@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -49,6 +50,7 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("database.New: %w", err)
 	}
+	defer database.Close(context.Background())
 
 	pricesUC := prices.New(database)
 	srv := server.New(

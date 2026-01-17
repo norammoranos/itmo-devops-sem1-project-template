@@ -67,13 +67,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	priceList, totalCount, err := parseCSV(csvData)
+	priceList, err := parseCSV(csvData)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	stats, err := h.prices.SavePrices(priceList, totalCount)
+	stats, err := h.prices.SavePrices(priceList, len(priceList))
 	if err != nil {
 		log.Println("SavePrices error:", err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
@@ -130,15 +130,14 @@ func extractFromTar(data []byte) ([]byte, error) {
 	return nil, fmt.Errorf("csv file not found")
 }
 
-func parseCSV(data []byte) ([]prices.Price, int, error) {
+func parseCSV(data []byte) ([]prices.Price, error) {
 	reader := csv.NewReader(bytes.NewReader(data))
 
 	if _, err := reader.Read(); err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
 	var result []prices.Price
-	totalCount := 0
 
 	for {
 		record, err := reader.Read()
@@ -146,10 +145,8 @@ func parseCSV(data []byte) ([]prices.Price, int, error) {
 			break
 		}
 		if err != nil {
-			return nil, 0, err
+			return nil, err
 		}
-
-		totalCount++
 
 		if len(record) != 5 {
 			continue
@@ -189,5 +186,5 @@ func parseCSV(data []byte) ([]prices.Price, int, error) {
 		})
 	}
 
-	return result, totalCount, nil
+	return result, nil
 }

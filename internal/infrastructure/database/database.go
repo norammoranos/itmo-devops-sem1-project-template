@@ -46,7 +46,8 @@ func (d *Database) WithTransaction(do func(conn Connection) error) error {
 
 func (d *Database) init() error {
 	_, err := d.Exec(context.Background(), `
-		CREATE TABLE IF NOT EXISTS prices (
+		DROP TABLE IF EXISTS prices;
+		CREATE TABLE prices (
 			id SERIAL PRIMARY KEY,
 			name VARCHAR(255) NOT NULL,
 			category VARCHAR(255) NOT NULL,

@@ -90,7 +90,7 @@ func (u *Usecase) SavePrices(prices []Price, totalCount int) (*Stats, error) {
 func (u *Usecase) GetPrices(filter Filter) ([]Price, error) {
 	ctx := context.Background()
 
-	query := "SELECT id, name, category, price, create_date FROM prices WHERE 1=1"
+	query := "SELECT id, name, category, price, TO_CHAR(create_date, 'YYYY-MM-DD') FROM prices WHERE 1=1"
 	args := []any{}
 	argNum := 1
 
@@ -129,11 +129,9 @@ func (u *Usecase) GetPrices(filter Filter) ([]Price, error) {
 	var prices []Price
 	for rows.Next() {
 		var p Price
-		var createDate string
-		if err := rows.Scan(&p.ID, &p.Name, &p.Category, &p.Price, &createDate); err != nil {
+		if err := rows.Scan(&p.ID, &p.Name, &p.Category, &p.Price, &p.CreateDate); err != nil {
 			return nil, err
 		}
-		p.CreateDate = formatDate(createDate)
 		prices = append(prices, p)
 	}
 
